@@ -6,7 +6,7 @@ export interface DirectoryEmployee {
   mobile: string;
 }
 
-export type UserRole = 'employee' | 'it_agent' | 'org_admin';
+export type UserRole = 'employee' | 'it_agent' | 'org_admin' | 'super_admin';
 
 export interface DirectoryEmployeeAdmin extends DirectoryEmployee {
   email?: string;

@@ -30,6 +30,7 @@ import { AssetsPage } from './pages/AssetsPage';
 import { AssetPicker } from './components/shared/AssetPicker';
 import { LinkedAssetCard } from './components/shared/LinkedAssetCard';
 import { AppNav, type AppView } from './components/shared/AppNav';
+import { SuperAdminBanner } from './components/shared/SuperAdminBanner';
 import { DEPARTMENTS } from './constants';
 
 const PROBLEM_TYPES = [
@@ -68,12 +69,16 @@ const STATUSES: { value: TicketStatus; label: string; color: string }[] = [
 ];
 
 export default function App() {
-  const { user, organization, logout } = useAuth();
+  const { user, organization, logout, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const role = user!.role;
 
   const defaultView: AppView =
-    role === 'org_admin' ? 'admin' : role === 'it_agent' ? 'it' : 'employee';
+    role === 'super_admin' || role === 'org_admin'
+      ? 'admin'
+      : role === 'it_agent'
+        ? 'it'
+        : 'employee';
   const [view, setView] = useState<AppView>(defaultView);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,14 +86,16 @@ export default function App() {
   const [assetsFocusId, setAssetsFocusId] = useState<string | null>(null);
   const [pendingTicketId, setPendingTicketId] = useState<string | null>(null);
 
-  const canAccessIt = role === 'it_agent' || role === 'org_admin';
-  const canAccessAdmin = role === 'org_admin';
+  const canAccessIt = role === 'it_agent' || role === 'org_admin' || role === 'super_admin';
+  const canAccessAdmin = role === 'org_admin' || role === 'super_admin';
+  const canCreateTickets = role !== 'super_admin';
 
   useEffect(() => {
+    if (!canCreateTickets && (view === 'employee' || view === 'my-tickets')) setView('it');
     if (view === 'it' && !canAccessIt) setView('employee');
     if (view === 'admin' && !canAccessAdmin) setView('employee');
     if (view === 'assets' && !canAccessIt) setView('employee');
-  }, [view, canAccessIt, canAccessAdmin]);
+  }, [view, canAccessIt, canAccessAdmin, canCreateTickets]);
 
   useEffect(() => {
     if (view === 'it' && pendingTicketId) {
@@ -178,11 +185,16 @@ export default function App() {
 
   const handleLogout = async () => {
     await logout();
-    navigate(`/o/${organization!.slug}/login`);
+    if (isSuperAdmin) {
+      navigate('/platform/login');
+    } else {
+      navigate(`/o/${organization!.slug}/login`);
+    }
   };
 
   return (
     <div className="h-dvh flex flex-col overflow-hidden">
+      {isSuperAdmin && <SuperAdminBanner />}
       <AppNav
         view={view}
         setView={setView}
@@ -190,6 +202,7 @@ export default function App() {
         userLabel={user?.employee?.fullName ?? user?.email ?? ''}
         canAccessIt={canAccessIt}
         canAccessAdmin={canAccessAdmin}
+        canCreateTickets={canCreateTickets}
         onLogout={handleLogout}
         onOpenAssets={() => setAssetsFocusId(null)}
       />

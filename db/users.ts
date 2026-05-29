@@ -162,6 +162,34 @@ export async function getUserIdByEmployeeId(
   return rows[0]?.id ?? null;
 }
 
+export async function createSuperAdmin(data: {
+  email: string;
+  password: string;
+  fullName: string;
+  platformOrganizationId: string;
+}): Promise<AuthUser> {
+  const passwordHash = await hashPassword(data.password);
+  const { rows } = await pool.query<UserRow>(
+    `INSERT INTO users (organization_id, email, password_hash, role, employee_id)
+     VALUES ($1, $2, $3, 'super_admin', NULL)
+     RETURNING id, organization_id, email, password_hash, role, employee_id, is_active`,
+    [data.platformOrganizationId, data.email.toLowerCase().trim(), passwordHash]
+  );
+  return mapUser(rows[0], null);
+}
+
+export async function findSuperAdminByEmail(
+  email: string
+): Promise<(AuthUser & { passwordHash: string }) | null> {
+  const { rows } = await pool.query<UserRow>(
+    `SELECT id, organization_id, email, password_hash, role, employee_id, is_active
+     FROM users WHERE email = $1 AND role = 'super_admin' AND is_active = TRUE`,
+    [email.toLowerCase().trim()]
+  );
+  if (!rows[0]) return null;
+  return { ...mapUser(rows[0], null), passwordHash: rows[0].password_hash };
+}
+
 export async function createUserForExistingEmployee(data: {
   organizationId: string;
   employeeId: string;

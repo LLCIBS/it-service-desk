@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "seed:org": "tsx scripts/seed-organization.ts"
+    "seed:org": "tsx scripts/seed-organization.ts",
+    "seed:platform": "tsx scripts/seed-platform-admin.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

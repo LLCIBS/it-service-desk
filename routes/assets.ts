@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { requireAuth, type AuthedRequest } from "../middleware/requireAuth";
+import { requireTenantAuth, type AuthedRequest } from "../middleware/requireAuth";
 import { requireRole } from "../middleware/requireRole";
 import * as assetsRepo from "../db/assets";
 import type { AssetStatus, AssetType } from "../src/types";
 
 export const assetsRouter = Router();
 
-assetsRouter.get("/assets/lookup", requireAuth, async (req: AuthedRequest, res) => {
+assetsRouter.get("/assets/lookup", requireTenantAuth, async (req: AuthedRequest, res) => {
   try {
     const q = typeof req.query.q === "string" ? req.query.q : "";
     if (!q.trim()) {
@@ -20,7 +20,7 @@ assetsRouter.get("/assets/lookup", requireAuth, async (req: AuthedRequest, res) 
   }
 });
 
-assetsRouter.use(requireAuth, requireRole("it_agent", "org_admin"));
+assetsRouter.use(requireTenantAuth, requireRole("it_agent", "org_admin"));
 
 assetsRouter.get("/assets", async (req: AuthedRequest, res) => {
   try {

@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { requireAuth, type AuthedRequest } from "../middleware/requireAuth";
+import { requireTenantAuth, type AuthedRequest } from "../middleware/requireAuth";
 import { requireRole } from "../middleware/requireRole";
 import * as credentialsRepo from "../db/credentials";
 
 export const credentialsRouter = Router();
 
-credentialsRouter.use(requireAuth, requireRole("it_agent", "org_admin"));
+credentialsRouter.use(requireTenantAuth, requireRole("it_agent", "org_admin"));
 
 credentialsRouter.get("/credentials", async (req: AuthedRequest, res) => {
   try {

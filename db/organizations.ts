@@ -1,10 +1,13 @@
 import { pool } from "./pool";
 import type { AuthOrganization } from "./auth-types";
+import { createUserWithEmployee } from "./users";
+import { PLATFORM_ORG_SLUG } from "./migrate-platform";
 
 interface OrgRow {
   id: string;
   slug: string;
   name: string;
+  created_at?: Date;
 }
 
 function mapOrg(row: OrgRow): AuthOrganization {
@@ -34,4 +37,57 @@ export async function createOrganization(slug: string, name: string): Promise<Au
     [slug, name]
   );
   return mapOrg(rows[0]);
+}
+
+export async function getPlatformOrganization(): Promise<AuthOrganization> {
+  const org = await getOrganizationBySlug(PLATFORM_ORG_SLUG);
+  if (!org) throw new Error("Platform organization not initialized");
+  return org;
+}
+
+export interface OrganizationListItem extends AuthOrganization {
+  createdAt: string;
+}
+
+export async function listOrganizations(): Promise<OrganizationListItem[]> {
+  const { rows } = await pool.query<OrgRow>(
+    `SELECT id, slug, name, created_at FROM organizations
+     WHERE slug != $1
+     ORDER BY name ASC`,
+    [PLATFORM_ORG_SLUG]
+  );
+  return rows.map((r) => ({
+    ...mapOrg(r),
+    createdAt: r.created_at ? r.created_at.toISOString() : new Date().toISOString(),
+  }));
+}
+
+export async function createOrganizationWithAdmin(data: {
+  slug: string;
+  name: string;
+  adminEmail: string;
+  adminPassword: string;
+  adminName: string;
+  department?: string;
+}): Promise<{ organization: AuthOrganization; loginUrl: string }> {
+  const existing = await getOrganizationBySlug(data.slug);
+  if (existing) {
+    throw Object.assign(new Error("Organization slug already exists"), { code: "SLUG_EXISTS" });
+  }
+
+  const organization = await createOrganization(data.slug, data.name);
+  await createUserWithEmployee({
+    organizationId: organization.id,
+    email: data.adminEmail,
+    password: data.adminPassword,
+    role: "org_admin",
+    department: data.department || "ИТ",
+    fullName: data.adminName,
+    mobile: "",
+  });
+
+  return {
+    organization,
+    loginUrl: `/o/${organization.slug}/login`,
+  };
 }

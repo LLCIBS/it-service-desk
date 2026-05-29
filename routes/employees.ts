@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, type AuthedRequest } from "../middleware/requireAuth";
+import { requireTenantAuth, type AuthedRequest } from "../middleware/requireAuth";
 import { requireRole } from "../middleware/requireRole";
 import * as employeesRepo from "../db/employees";
 
@@ -7,7 +7,7 @@ export const employeesRouter = Router();
 
 employeesRouter.get(
   "/employees/lookup",
-  requireAuth,
+  requireTenantAuth,
   requireRole("it_agent", "org_admin"),
   async (req: AuthedRequest, res) => {
     try {
@@ -20,7 +20,7 @@ employeesRouter.get(
   }
 );
 
-employeesRouter.use(requireAuth, requireRole("org_admin"));
+employeesRouter.use(requireTenantAuth, requireRole("org_admin"));
 
 employeesRouter.get("/employees", async (req: AuthedRequest, res) => {
   try {

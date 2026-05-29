@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(50) NOT NULL CHECK (role IN ('employee', 'it_agent', 'org_admin')),
+  role VARCHAR(50) NOT NULL CHECK (role IN ('employee', 'it_agent', 'org_admin', 'super_admin')),
   employee_id UUID UNIQUE REFERENCES employees(id) ON DELETE SET NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

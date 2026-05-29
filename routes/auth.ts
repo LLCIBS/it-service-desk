@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { findUserByEmail, verifyPassword } from "../db/users";
 import { resolveOrgFromSlug, type OrgRequest } from "../middleware/resolveOrg";
-import { requireAuth, type AuthedRequest } from "../middleware/requireAuth";
+import { requireTenantAuth, type AuthedRequest } from "../middleware/requireAuth";
 
 export const authRouter = Router();
 
@@ -16,6 +16,12 @@ authRouter.post("/o/:orgSlug/auth/login", resolveOrgFromSlug, async (req: OrgReq
     const user = await findUserByEmail(String(email));
     if (!user || user.organizationId !== org.id) {
       return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    if (user.role === "super_admin") {
+      return res.status(403).json({
+        error: "Используйте вход на странице платформы: /platform/login",
+      });
     }
 
     const valid = await verifyPassword(String(password), user.passwordHash);
@@ -47,7 +53,7 @@ authRouter.post("/o/:orgSlug/auth/login", resolveOrgFromSlug, async (req: OrgReq
   }
 });
 
-authRouter.post("/auth/logout", requireAuth, (req: AuthedRequest, res) => {
+authRouter.post("/auth/logout", requireTenantAuth, (req: AuthedRequest, res) => {
   req.session.destroy((err) => {
     if (err) {
       console.error(err);
@@ -58,7 +64,7 @@ authRouter.post("/auth/logout", requireAuth, (req: AuthedRequest, res) => {
   });
 });
 
-authRouter.get("/auth/me", requireAuth, (req: AuthedRequest, res) => {
+authRouter.get("/auth/me", requireTenantAuth, (req: AuthedRequest, res) => {
   const user = req.user!;
   res.json({
     user: {
@@ -68,5 +74,6 @@ authRouter.get("/auth/me", requireAuth, (req: AuthedRequest, res) => {
       employee: user.employee,
     },
     organization: user.organization,
+    inTenantContext: Boolean(user.inTenantContext),
   });
 });

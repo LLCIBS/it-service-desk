@@ -14,6 +14,7 @@ import { createTicketsRouter } from "./routes/tickets";
 import { employeesRouter } from "./routes/employees";
 import { assetsRouter } from "./routes/assets";
 import { credentialsRouter } from "./routes/credentials";
+import { platformRouter } from "./routes/platform";
 import type { AuthedRequest } from "./middleware/requireAuth";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
@@ -85,6 +86,7 @@ async function startServer() {
 
   const upload = createUpload();
 
+  app.use("/api/platform", platformRouter);
   app.use("/api", authRouter);
   app.use("/api", createTicketsRouter(upload));
   app.use("/api", employeesRouter);

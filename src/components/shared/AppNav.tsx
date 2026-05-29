@@ -17,6 +17,7 @@ export function AppNav({
   userLabel,
   canAccessIt,
   canAccessAdmin,
+  canCreateTickets = true,
   onLogout,
   onOpenAssets,
 }: {
@@ -26,12 +27,13 @@ export function AppNav({
   userLabel: string;
   canAccessIt: boolean;
   canAccessAdmin: boolean;
+  canCreateTickets?: boolean;
   onLogout: () => void;
   onOpenAssets?: () => void;
 }) {
   const tabs: { id: AppView; show: boolean; onClick?: () => void }[] = [
-    { id: 'employee', show: true },
-    { id: 'my-tickets', show: !canAccessIt },
+    { id: 'employee', show: canCreateTickets },
+    { id: 'my-tickets', show: canCreateTickets && !canAccessIt },
     { id: 'it', show: canAccessIt },
     { id: 'assets', show: canAccessIt, onClick: onOpenAssets },
     { id: 'admin', show: canAccessAdmin },

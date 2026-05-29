@@ -2,14 +2,14 @@ import { Router } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { requireAuth, type AuthedRequest } from "../middleware/requireAuth";
+import { requireTenantAuth, type AuthedRequest } from "../middleware/requireAuth";
 import { requireRole } from "../middleware/requireRole";
 import * as ticketsRepo from "../db/tickets";
 
 export function createTicketsRouter(upload: multer.Multer) {
   const router = Router();
 
-  router.use(requireAuth);
+  router.use(requireTenantAuth);
 
   router.get("/tickets", async (req: AuthedRequest, res) => {
     try {

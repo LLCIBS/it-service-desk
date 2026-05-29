@@ -1,4 +1,4 @@
-export type UserRole = "employee" | "it_agent" | "org_admin";
+export type UserRole = "employee" | "it_agent" | "org_admin" | "super_admin";
 
 export interface AuthOrganization {
   id: string;
@@ -24,11 +24,13 @@ export interface AuthUser {
 
 export interface SessionUser extends AuthUser {
   organization: AuthOrganization;
+  inTenantContext?: boolean;
 }
 
 declare module "express-session" {
   interface SessionData {
     userId?: string;
-    organizationId?: string;
+    organizationId?: string | null;
+    homeOrganizationId?: string;
   }
 }

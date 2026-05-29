@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { orgSlug } = useParams<{ orgSlug: string }>();
-  const { user, organization, loading } = useAuth();
+  const { user, organization, isSuperAdmin, inTenantContext, loading } = useAuth();
 
   if (loading) {
     return (
@@ -14,7 +14,21 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!user || !organization) {
+  if (!user) {
+    return <Navigate to={`/o/${orgSlug}/login`} replace />;
+  }
+
+  if (isSuperAdmin) {
+    if (!inTenantContext || !organization) {
+      return <Navigate to="/platform" replace />;
+    }
+    if (organization.slug !== orgSlug) {
+      return <Navigate to={`/o/${organization.slug}`} replace />;
+    }
+    return <>{children}</>;
+  }
+
+  if (!organization) {
     return <Navigate to={`/o/${orgSlug}/login`} replace />;
   }
 
