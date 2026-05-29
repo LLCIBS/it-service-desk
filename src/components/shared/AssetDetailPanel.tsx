@@ -275,14 +275,38 @@ export function AssetDetailPanel({
               <div className="border-t pt-4 space-y-4">
                 <h4 className="font-semibold text-slate-800">Характеристики</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <input className="input" placeholder="CPU" value={String(form.cpu ?? '')} onChange={(e) => setForm({ ...form, cpu: e.target.value })} />
-                  <input className="input" type="number" placeholder="RAM (ГБ)" value={String(form.ramGb ?? '')} onChange={(e) => setForm({ ...form, ramGb: e.target.value })} />
-                  <input className="input" placeholder="Диск" value={String(form.storage ?? '')} onChange={(e) => setForm({ ...form, storage: e.target.value })} />
-                  <input className="input" placeholder="ОС" value={String(form.osName ?? '')} onChange={(e) => setForm({ ...form, osName: e.target.value })} />
-                  <input className="input" placeholder="Версия ОС" value={String(form.osVersion ?? '')} onChange={(e) => setForm({ ...form, osVersion: e.target.value })} />
-                  <input className="input" placeholder="IP" value={String(form.ipAddress ?? '')} onChange={(e) => setForm({ ...form, ipAddress: e.target.value })} />
-                  <input className="input" placeholder="MAC" value={String(form.macAddress ?? '')} onChange={(e) => setForm({ ...form, macAddress: e.target.value })} />
-                  <input className="input" placeholder="Имя хоста" value={String(form.hostname ?? '')} onChange={(e) => setForm({ ...form, hostname: e.target.value })} />
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">CPU</label>
+                    <input className="input w-full" value={String(form.cpu ?? '')} onChange={(e) => setForm({ ...form, cpu: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">RAM (ГБ)</label>
+                    <input className="input w-full" type="number" value={String(form.ramGb ?? '')} onChange={(e) => setForm({ ...form, ramGb: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Диск</label>
+                    <input className="input w-full" value={String(form.storage ?? '')} onChange={(e) => setForm({ ...form, storage: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">ОС</label>
+                    <input className="input w-full" value={String(form.osName ?? '')} onChange={(e) => setForm({ ...form, osName: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Версия ОС</label>
+                    <input className="input w-full" value={String(form.osVersion ?? '')} onChange={(e) => setForm({ ...form, osVersion: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">IP</label>
+                    <input className="input w-full" value={String(form.ipAddress ?? '')} onChange={(e) => setForm({ ...form, ipAddress: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">MAC</label>
+                    <input className="input w-full" value={String(form.macAddress ?? '')} onChange={(e) => setForm({ ...form, macAddress: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Имя хоста</label>
+                    <input className="input w-full" value={String(form.hostname ?? '')} onChange={(e) => setForm({ ...form, hostname: e.target.value })} />
+                  </div>
                 </div>
               </div>
             )}
