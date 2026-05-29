@@ -447,8 +447,11 @@ export async function updateSoftware(
 
   if (fields.length > 0) {
     values.push(softwareId, assetId);
+    const idParam = values.length - 1;
+    const assetParam = values.length;
     await pool.query(
-      `UPDATE asset_software SET ${fields.join(", ")} WHERE id = $${idx++} AND asset_id = $${idx}`,
+      `UPDATE asset_software SET ${fields.join(", ")}
+       WHERE id = $${idParam} AND asset_id = $${assetParam}`,
       values
     );
   }
