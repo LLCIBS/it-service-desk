@@ -34,6 +34,12 @@ export interface AuthOrganization {
   name: string;
 }
 
+export interface Department {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 export type TicketStatus = 'new' | 'in-progress' | 'waiting-for-info' | 'waiting-for-resources' | 'resolved' | 'closed' | 'cancelled';
 

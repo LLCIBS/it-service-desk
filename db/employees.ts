@@ -144,27 +144,29 @@ export async function updateEmployee(
     role: UserRole;
   }>
 ): Promise<DirectoryEmployeeAdmin | null> {
-  const fields: string[] = [];
+  const setClauses: string[] = [];
   const values: unknown[] = [];
-  let idx = 1;
 
   if (data.department !== undefined) {
-    fields.push(`department = $${idx++}`);
     values.push(data.department);
+    setClauses.push(`department = $${values.length}`);
   }
   if (data.fullName !== undefined) {
-    fields.push(`full_name = $${idx++}`);
     values.push(data.fullName);
+    setClauses.push(`full_name = $${values.length}`);
   }
   if (data.mobile !== undefined) {
-    fields.push(`mobile = $${idx++}`);
     values.push(data.mobile);
+    setClauses.push(`mobile = $${values.length}`);
   }
 
-  if (fields.length > 0) {
+  if (setClauses.length > 0) {
     values.push(id, organizationId);
+    const idParam = values.length - 1;
+    const orgParam = values.length;
     const { rowCount } = await pool.query(
-      `UPDATE employees SET ${fields.join(", ")} WHERE id = $${idx++} AND organization_id = $${idx}`,
+      `UPDATE employees SET ${setClauses.join(", ")}
+       WHERE id = $${idParam} AND organization_id = $${orgParam}`,
       values
     );
     if ((rowCount ?? 0) === 0) return null;

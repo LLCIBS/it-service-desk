@@ -6,7 +6,7 @@ import { StatusBadge } from './StatusBadge';
 import { EmployeeSelect } from './EmployeeSelect';
 import { SoftwareListEditor } from './SoftwareListEditor';
 import { CredentialListEditor } from './CredentialListEditor';
-import { DEPARTMENTS } from '../../constants';
+import { DepartmentSelect } from '../../components/shared/DepartmentSelect';
 
 const ASSET_TYPES: { value: AssetType; label: string }[] = [
   { value: 'computer', label: 'Компьютер' },
@@ -261,12 +261,10 @@ export function AssetDetailPanel({
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Отдел</label>
-                <select className="input w-full" value={String(form.department ?? '')} onChange={(e) => setForm({ ...form, department: e.target.value })}>
-                  <option value="">—</option>
-                  {DEPARTMENTS.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
+                <DepartmentSelect
+                  value={String(form.department ?? '')}
+                  onChange={(v) => setForm({ ...form, department: v })}
+                />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -1,4 +1,5 @@
-export const DEPARTMENTS = [
+/** Список отделов по умолчанию при создании организации (платформа / seed) */
+export const DEFAULT_DEPARTMENTS = [
   'Бухгалтерия',
   'Отдел кадров',
   'Маркетинг',

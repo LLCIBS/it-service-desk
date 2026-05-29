@@ -31,7 +31,9 @@ import { AssetPicker } from './components/shared/AssetPicker';
 import { LinkedAssetCard } from './components/shared/LinkedAssetCard';
 import { AppNav, type AppView } from './components/shared/AppNav';
 import { SuperAdminBanner } from './components/shared/SuperAdminBanner';
-import { DEPARTMENTS } from './constants';
+import { DepartmentsProvider, useDepartments } from './context/DepartmentsContext';
+import { DepartmentSelect } from './components/shared/DepartmentSelect';
+import { DepartmentsDirectory } from './components/shared/DepartmentsDirectory';
 
 const PROBLEM_TYPES = [
   { id: 'hardware', label: 'Аппаратное обеспечение (ПК, ноутбук, принтер...)', shortLabel: 'Аппаратное обеспечение' },
@@ -193,6 +195,7 @@ export default function App() {
   };
 
   return (
+    <DepartmentsProvider>
     <div className="h-dvh flex flex-col overflow-hidden">
       {isSuperAdmin && <SuperAdminBanner />}
       <AppNav
@@ -248,6 +251,7 @@ export default function App() {
         </AnimatePresence>
       </main>
     </div>
+    </DepartmentsProvider>
   );
 }
 
@@ -483,6 +487,8 @@ function EmployeePortal({ onCreate, onViewTickets }: { onCreate: (data: FormData
 }
 
 function AdminDirectory() {
+  const [section, setSection] = useState<'employees' | 'departments'>('employees');
+  const { refresh: refreshDepartments } = useDepartments();
   const [list, setList] = useState<DirectoryEmployeeAdmin[]>([]);
   const [loading, setLoading] = useState(true);
   const [dept, setDept] = useState('');
@@ -508,8 +514,10 @@ function AdminDirectory() {
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    if (section === 'employees') {
+      load();
+    }
+  }, [section]);
 
   const cancelEdit = () => {
     setEditingId(null);
@@ -523,7 +531,14 @@ function AdminDirectory() {
   };
 
   const save = async () => {
-    if (!dept.trim() || !fullName.trim()) return;
+    if (!fullName.trim()) {
+      setError('Укажите ФИО');
+      return;
+    }
+    if (!dept.trim()) {
+      setError('Выберите отдел');
+      return;
+    }
     if (!editingId && email && !password) {
       setError('Укажите пароль для новой учётной записи');
       return;
@@ -574,6 +589,24 @@ function AdminDirectory() {
     setError('');
   };
 
+  if (section === 'departments') {
+    return (
+      <div className="h-full flex flex-col min-h-0">
+        <div className="px-4 sm:px-6 pt-4 shrink-0 max-w-5xl mx-auto w-full">
+          <AdminSectionTabs section={section} onChange={setSection} />
+        </div>
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <DepartmentsDirectory
+            onChanged={() => {
+              refreshDepartments();
+              load();
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -581,6 +614,7 @@ function AdminDirectory() {
       exit={{ opacity: 0, y: -12 }}
       className="max-w-5xl mx-auto py-6 sm:py-10 px-4 sm:px-6 overflow-y-auto h-full safe-bottom"
     >
+      <AdminSectionTabs section={section} onChange={setSection} className="mb-6" />
       <div className="mb-6 sm:mb-8 flex items-start gap-3 sm:gap-4">
         <div className="bg-blue-600 p-2.5 sm:p-3 rounded-xl shrink-0">
           <Users className="text-white w-6 h-6 sm:w-7 sm:h-7" />
@@ -600,12 +634,7 @@ function AdminDirectory() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Отдел *</label>
-            <select className="input" value={dept} onChange={(e) => setDept(e.target.value)}>
-              <option value="">Выберите отдел</option>
-              {DEPARTMENTS.map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
+            <DepartmentSelect value={dept} onChange={setDept} allowEmpty={!editingId} emptyLabel="Выберите отдел" required />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">ФИО *</label>
@@ -769,6 +798,43 @@ function AdminDirectory() {
         )}
       </div>
     </motion.div>
+  );
+}
+
+function AdminSectionTabs({
+  section,
+  onChange,
+  className = '',
+}: {
+  section: 'employees' | 'departments';
+  onChange: (s: 'employees' | 'departments') => void;
+  className?: string;
+}) {
+  return (
+    <div className={`flex gap-1.5 overflow-x-auto scrollbar-hide ${className}`}>
+      <button
+        type="button"
+        onClick={() => onChange('employees')}
+        className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+          section === 'employees'
+            ? 'bg-blue-600 text-white shadow-sm'
+            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+        }`}
+      >
+        Сотрудники
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('departments')}
+        className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+          section === 'departments'
+            ? 'bg-blue-600 text-white shadow-sm'
+            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+        }`}
+      >
+        Отделы
+      </button>
+    </div>
   );
 }
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, LogOut, Plus, Building2, ExternalLink } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { apiFetch } from '../lib/api';
-import { DEPARTMENTS } from '../constants';
+import { DEFAULT_DEPARTMENTS } from '../constants';
 
 interface OrganizationListItem {
   id: string;
@@ -139,7 +139,7 @@ export function PlatformOrganizationsPage() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Отдел админа</label>
               <select className="input" value={department} onChange={(e) => setDepartment(e.target.value)}>
-                {DEPARTMENTS.map((d) => (
+                {DEFAULT_DEPARTMENTS.map((d) => (
                   <option key={d} value={d}>{d}</option>
                 ))}
               </select>

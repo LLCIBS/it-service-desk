@@ -12,6 +12,7 @@ import { initDb, pool } from "./db/init";
 import { authRouter } from "./routes/auth";
 import { createTicketsRouter } from "./routes/tickets";
 import { employeesRouter } from "./routes/employees";
+import { departmentsRouter } from "./routes/departments";
 import { assetsRouter } from "./routes/assets";
 import { credentialsRouter } from "./routes/credentials";
 import { platformRouter } from "./routes/platform";
@@ -90,6 +91,7 @@ async function startServer() {
   app.use("/api", authRouter);
   app.use("/api", createTicketsRouter(upload));
   app.use("/api", employeesRouter);
+  app.use("/api", departmentsRouter);
   app.use("/api", assetsRouter);
   app.use("/api", credentialsRouter);
 

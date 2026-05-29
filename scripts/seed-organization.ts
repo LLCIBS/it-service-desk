@@ -2,6 +2,7 @@ import "dotenv/config";
 import { pool } from "../db/pool";
 import { initDb } from "../db/init";
 import { createOrganization } from "../db/organizations";
+import { seedDefaultDepartments } from "../db/departments";
 import { createUserWithEmployee } from "../db/users";
 
 function parseArgs() {
@@ -56,9 +57,11 @@ Usage:
   if (!orgId) {
     const created = await createOrganization(slug, name);
     orgId = created.id;
+    await seedDefaultDepartments(orgId);
     console.log(`Created organization: ${name} (${slug})`);
   } else {
     console.log(`Organization already exists: ${slug}`);
+    await seedDefaultDepartments(orgId);
   }
 
   const existing = await pool.query(

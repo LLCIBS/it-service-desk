@@ -5,6 +5,7 @@ import { pool } from "./pool";
 import { migrateFromJsonIfNeeded } from "./migrate-json";
 import { migrateAuthSchema } from "./migrate-auth";
 import { migratePlatformSchema } from "./migrate-platform";
+import { migrateDepartmentsSchema } from "./migrate-departments";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -14,6 +15,7 @@ export async function initDb(): Promise<void> {
   const schema = fs.readFileSync(schemaPath, "utf-8");
   await pool.query(schema);
   await migratePlatformSchema();
+  await migrateDepartmentsSchema();
   await migrateFromJsonIfNeeded();
   console.log("PostgreSQL: schema ready");
 }

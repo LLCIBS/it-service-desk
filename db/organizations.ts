@@ -1,6 +1,7 @@
 import { pool } from "./pool";
 import type { AuthOrganization } from "./auth-types";
 import { createUserWithEmployee } from "./users";
+import { seedDefaultDepartments } from "./departments";
 import { PLATFORM_ORG_SLUG } from "./migrate-platform";
 
 interface OrgRow {
@@ -76,6 +77,7 @@ export async function createOrganizationWithAdmin(data: {
   }
 
   const organization = await createOrganization(data.slug, data.name);
+  await seedDefaultDepartments(organization.id);
   await createUserWithEmployee({
     organizationId: organization.id,
     email: data.adminEmail,
