@@ -12,6 +12,8 @@ import { initDb, pool } from "./db/init";
 import { authRouter } from "./routes/auth";
 import { createTicketsRouter } from "./routes/tickets";
 import { employeesRouter } from "./routes/employees";
+import { assetsRouter } from "./routes/assets";
+import { credentialsRouter } from "./routes/credentials";
 import type { AuthedRequest } from "./middleware/requireAuth";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
@@ -86,6 +88,8 @@ async function startServer() {
   app.use("/api", authRouter);
   app.use("/api", createTicketsRouter(upload));
   app.use("/api", employeesRouter);
+  app.use("/api", assetsRouter);
+  app.use("/api", credentialsRouter);
 
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

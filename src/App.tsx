@@ -32,10 +32,10 @@ import { useNavigate } from 'react-router-dom';
 import { Ticket, TicketStatus, Priority, Comment, DirectoryEmployeeAdmin, UserRole } from './types';
 import { useAuth } from './hooks/useAuth';
 import { apiFetch, ticketFileUrl } from './lib/api';
-
-const DEPARTMENTS = [
-  'Бухгалтерия', 'Отдел кадров', 'Маркетинг', 'Продажи', 'Логистика', 'ИТ', 'Юридический отдел', 'Администрация'
-];
+import { AssetsPage } from './pages/AssetsPage';
+import { AssetPicker } from './components/shared/AssetPicker';
+import { LinkedAssetCard } from './components/shared/LinkedAssetCard';
+import { DEPARTMENTS } from './constants';
 
 const PROBLEM_TYPES = [
   { id: 'hardware', label: 'Аппаратное обеспечение (ПК, ноутбук, принтер...)', icon: Monitor },
@@ -68,12 +68,15 @@ export default function App() {
   const navigate = useNavigate();
   const role = user!.role;
 
-  const defaultView: 'employee' | 'my-tickets' | 'it' | 'admin' =
+  type AppView = 'employee' | 'my-tickets' | 'it' | 'admin' | 'assets';
+  const defaultView: AppView =
     role === 'org_admin' ? 'admin' : role === 'it_agent' ? 'it' : 'employee';
-  const [view, setView] = useState<'employee' | 'my-tickets' | 'it' | 'admin'>(defaultView);
+  const [view, setView] = useState<AppView>(defaultView);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [assetsFocusId, setAssetsFocusId] = useState<string | null>(null);
+  const [pendingTicketId, setPendingTicketId] = useState<string | null>(null);
 
   const canAccessIt = role === 'it_agent' || role === 'org_admin';
   const canAccessAdmin = role === 'org_admin';
@@ -81,7 +84,21 @@ export default function App() {
   useEffect(() => {
     if (view === 'it' && !canAccessIt) setView('employee');
     if (view === 'admin' && !canAccessAdmin) setView('employee');
+    if (view === 'assets' && !canAccessIt) setView('employee');
   }, [view, canAccessIt, canAccessAdmin]);
+
+  useEffect(() => {
+    if (view === 'it' && pendingTicketId) {
+      const ticket = tickets.find((t) => t.id === pendingTicketId);
+      if (ticket) setSelectedTicket(ticket);
+      setPendingTicketId(null);
+    }
+  }, [view, pendingTicketId, tickets]);
+
+  const openAssetInModule = (assetId: string) => {
+    setAssetsFocusId(assetId);
+    setView('assets');
+  };
 
   const fetchTickets = async () => {
     try {
@@ -194,13 +211,22 @@ export default function App() {
               </button>
             )}
             {canAccessIt && (
-              <button 
-                type="button"
-                onClick={() => setView('it')}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'it' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-              >
-                ИТ-Служба
-              </button>
+              <>
+                <button 
+                  type="button"
+                  onClick={() => setView('it')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'it' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+                >
+                  ИТ-Служба
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => { setAssetsFocusId(null); setView('assets'); }}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'assets' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+                >
+                  ИТ-Активы
+                </button>
+              </>
             )}
             {canAccessAdmin && (
               <button 
@@ -255,6 +281,15 @@ export default function App() {
               selectedTicket={selectedTicket}
               setSelectedTicket={setSelectedTicket}
               title="ИТ-Служба"
+              onOpenAsset={openAssetInModule}
+            />
+          ) : view === 'assets' ? (
+            <AssetsPage
+              initialAssetId={assetsFocusId}
+              onNavigateToTicket={(ticketId) => {
+                setPendingTicketId(ticketId);
+                setView('it');
+              }}
             />
           ) : (
             <AdminDirectory />
@@ -272,9 +307,13 @@ function EmployeePortal({ onCreate, onViewTickets }: { onCreate: (data: FormData
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
+  const [assetId, setAssetId] = useState('');
+  const [problemType, setProblemType] = useState('hardware');
+  const showAssetPicker = ['hardware', 'peripherals', 'software'].includes(problemType);
 
   const resetFormFields = () => {
     setFiles([]);
+    setAssetId('');
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -289,6 +328,7 @@ function EmployeePortal({ onCreate, onViewTickets }: { onCreate: (data: FormData
       description: formData.get('description'),
       priority: formData.get('priority'),
       remoteAccess: formData.get('remoteAccess') === 'on',
+      assetId: assetId || undefined,
     };
 
     const finalFormData = new FormData();
@@ -384,13 +424,25 @@ function EmployeePortal({ onCreate, onViewTickets }: { onCreate: (data: FormData
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {PROBLEM_TYPES.map(type => (
                   <label key={type.id} className="relative flex items-center p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                    <input type="radio" name="problemType" value={type.id} required className="sr-only" />
+                    <input
+                      type="radio"
+                      name="problemType"
+                      value={type.id}
+                      required
+                      className="sr-only"
+                      checked={problemType === type.id}
+                      onChange={() => setProblemType(type.id)}
+                    />
                     <type.icon className="w-5 h-5 text-slate-400 mr-3" />
                     <span className="text-sm font-medium text-slate-700">{type.label}</span>
                   </label>
                 ))}
               </div>
             </div>
+
+            {showAssetPicker && (
+              <AssetPicker value={assetId} onChange={(id) => setAssetId(id)} />
+            )}
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Краткое описание (заголовок) *</label>
@@ -735,6 +787,7 @@ function ITDashboard({
   setSelectedTicket,
   canManageTickets,
   title = 'Заявки',
+  onOpenAsset,
 }: { 
   tickets: Ticket[]; 
   loading: boolean;
@@ -744,6 +797,7 @@ function ITDashboard({
   setSelectedTicket: (t: Ticket | null) => void;
   canManageTickets: boolean;
   title?: string;
+  onOpenAsset?: (assetId: string) => void;
 }) {
   const [filter, setFilter] = useState<TicketStatus | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -837,6 +891,7 @@ function ITDashboard({
             onUpdate={onUpdate}
             onAddComment={onAddComment}
             canManageTickets={canManageTickets}
+            onOpenAsset={onOpenAsset}
           />
         )}
       </div>
@@ -850,12 +905,14 @@ function TicketDetails({
   onUpdate, 
   onAddComment,
   canManageTickets,
+  onOpenAsset,
 }: { 
   ticket: Ticket; 
   onClose: () => void;
   onUpdate: (id: string, updates: Partial<Ticket>) => Promise<void>;
   onAddComment: (id: string, text: string) => Promise<void>;
   canManageTickets: boolean;
+  onOpenAsset?: (assetId: string) => void;
 }) {
   const [commentText, setCommentText] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
@@ -1029,6 +1086,12 @@ function TicketDetails({
           </div>
 
           <div className="space-y-8">
+            {ticket.linkedAsset && (
+              <LinkedAssetCard
+                asset={ticket.linkedAsset}
+                onOpenInAssets={onOpenAsset}
+              />
+            )}
             <section className="card p-4 space-y-4">
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Информация о заявителе</h4>
               <div className="space-y-3">

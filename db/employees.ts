@@ -35,6 +35,34 @@ function mapAdminRow(row: EmployeeAdminRow): DirectoryEmployeeAdmin {
 
 const EMPLOYEE_SELECT = `e.id, e.department, e.full_name, e.mobile`;
 
+export async function lookupEmployees(
+  organizationId: string
+): Promise<
+  { id: string; fullName: string; department: string; email?: string; role?: UserRole }[]
+> {
+  const { rows } = await pool.query<{
+    id: string;
+    full_name: string;
+    department: string;
+    email: string | null;
+    role: UserRole | null;
+  }>(
+    `SELECT e.id, e.full_name, e.department, u.email, u.role
+     FROM employees e
+     LEFT JOIN users u ON u.employee_id = e.id AND u.is_active = TRUE
+     WHERE e.organization_id = $1
+     ORDER BY e.full_name ASC`,
+    [organizationId]
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    fullName: r.full_name,
+    department: r.department,
+    email: r.email ?? undefined,
+    role: r.role ?? undefined,
+  }));
+}
+
 export async function getAllEmployees(organizationId: string): Promise<DirectoryEmployeeAdmin[]> {
   const { rows } = await pool.query<EmployeeAdminRow>(
     `SELECT ${EMPLOYEE_SELECT}, u.email, u.role, e.user_id

@@ -5,6 +5,21 @@ import * as employeesRepo from "../db/employees";
 
 export const employeesRouter = Router();
 
+employeesRouter.get(
+  "/employees/lookup",
+  requireAuth,
+  requireRole("it_agent", "org_admin"),
+  async (req: AuthedRequest, res) => {
+    try {
+      const data = await employeesRepo.lookupEmployees(req.user!.organizationId);
+      res.json(data);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to load employees" });
+    }
+  }
+);
+
 employeesRouter.use(requireAuth, requireRole("org_admin"));
 
 employeesRouter.get("/employees", async (req: AuthedRequest, res) => {
