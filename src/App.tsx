@@ -1061,6 +1061,29 @@ function TicketDetails({
         {/* Info Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
+            <section className="flex flex-wrap items-stretch gap-3">
+              {(() => {
+                const type = PROBLEM_TYPES.find((t) => t.id === ticket.problemType);
+                const Icon = PROBLEM_TYPE_ICONS[ticket.problemType] ?? TicketIcon;
+                return (
+                  <div className="inline-flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-100 min-w-[180px]">
+                    <Icon className="w-4 h-4 text-slate-500 shrink-0" />
+                    <div>
+                      <p className="text-[10px] text-slate-400 uppercase font-semibold tracking-wide">Тип обращения</p>
+                      <p className="text-sm font-medium text-slate-800">
+                        {(type?.shortLabel ?? type?.label ?? ticket.problemType) || '—'}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
+              {ticket.remoteAccess && (
+                <div className="inline-flex items-center px-3 py-2 bg-blue-50 rounded-lg border border-blue-100 text-sm text-blue-800">
+                  Возможен удалённый доступ
+                </div>
+              )}
+            </section>
+
             <section>
               <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Описание проблемы</h4>
               <div className="bg-slate-50 p-4 rounded-xl text-slate-700 whitespace-pre-wrap leading-relaxed">
