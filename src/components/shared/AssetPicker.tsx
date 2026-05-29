@@ -42,10 +42,10 @@ export function AssetPicker({
   return (
     <div className="relative">
       <label className="block text-sm font-medium text-slate-700 mb-1">Оборудование (необязательно)</label>
-      {selected ? (
-        <div className="flex items-center justify-between p-3 border border-slate-200 rounded-lg bg-slate-50">
-          <div>
-            <p className="font-medium text-slate-800">{selected.name}</p>
+        {selected ? (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border border-slate-200 rounded-lg bg-slate-50">
+          <div className="min-w-0">
+            <p className="font-medium text-slate-800 break-words">{selected.name}</p>
             <p className="text-xs text-slate-500">
               {selected.inventoryNumber ? `Инв. № ${selected.inventoryNumber}` : 'Без инв. номера'}
             </p>

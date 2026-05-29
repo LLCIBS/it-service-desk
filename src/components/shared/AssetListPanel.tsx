@@ -11,6 +11,7 @@ export function AssetListPanel({
   statusFilter,
   onStatusFilterChange,
   emptyText = 'Ничего не найдено',
+  className = '',
 }: {
   items: AssetSummary[];
   selectedId: string | null;
@@ -20,6 +21,7 @@ export function AssetListPanel({
   statusFilter: AssetStatus | 'all';
   onStatusFilterChange: (v: AssetStatus | 'all') => void;
   emptyText?: string;
+  className?: string;
 }) {
   const statuses: { value: AssetStatus | 'all'; label: string }[] = [
     { value: 'all', label: 'Все' },
@@ -30,16 +32,16 @@ export function AssetListPanel({
   ];
 
   return (
-    <div className="w-full md:w-1/3 border-r border-slate-200 bg-white flex flex-col h-full">
-      <div className="p-4 border-b border-slate-200 space-y-3">
+    <div className={`w-full md:w-1/3 md:min-w-0 md:max-w-md border-r border-slate-200 bg-white flex flex-col min-h-0 ${className}`}>
+      <div className="p-3 sm:p-4 border-b border-slate-200 space-y-3 shrink-0">
         <SearchInput value={search} onChange={onSearchChange} placeholder="Поиск..." />
-        <div className="flex flex-wrap gap-1">
+        <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-0.5 flex-wrap sm:flex-wrap">
           {statuses.map((s) => (
             <button
               key={s.value}
               type="button"
               onClick={() => onStatusFilterChange(s.value)}
-              className={`text-xs px-2 py-1 rounded-md ${
+              className={`text-xs px-2 py-1 rounded-md whitespace-nowrap shrink-0 ${
                 statusFilter === s.value ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
               }`}
             >
@@ -61,11 +63,11 @@ export function AssetListPanel({
                 selectedId === a.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''
               }`}
             >
-              <div className="flex justify-between items-start mb-1">
-                <span className="font-semibold text-slate-800 line-clamp-1">{a.name}</span>
+              <div className="flex justify-between items-start gap-2 mb-1 min-w-0">
+                <span className="font-semibold text-slate-800 line-clamp-2 min-w-0">{a.name}</span>
                 <StatusBadge status={a.status} />
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 break-words">
                 {a.inventoryNumber ? `№ ${a.inventoryNumber}` : 'Без инв. №'}
                 {a.assignedEmployeeName && ` · ${a.assignedEmployeeName}`}
               </p>

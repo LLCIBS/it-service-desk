@@ -102,7 +102,7 @@ export function CredentialListEditor({
         <input className="input" type="password" placeholder="Пароль *" value={password} onChange={(e) => setPassword(e.target.value)} />
         <input className="input sm:col-span-2" placeholder="URL" value={url} onChange={(e) => setUrl(e.target.value)} />
       </div>
-      <button type="button" onClick={add} className="btn btn-secondary text-sm inline-flex items-center gap-1">
+      <button type="button" onClick={add} className="btn btn-secondary text-sm inline-flex items-center gap-1 w-full sm:w-auto">
         <Plus className="w-4 h-4" />
         Добавить учётную запись
       </button>

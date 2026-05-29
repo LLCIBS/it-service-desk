@@ -74,7 +74,7 @@ export function SoftwareListEditor({
         <input className="input" placeholder="Версия" value={version} onChange={(e) => setVersion(e.target.value)} />
         <input className="input" placeholder="Лицензионный ключ" value={licenseKey} onChange={(e) => setLicenseKey(e.target.value)} />
       </div>
-      <button type="button" onClick={add} disabled={saving} className="btn btn-secondary text-sm inline-flex items-center gap-1">
+      <button type="button" onClick={add} disabled={saving} className="btn btn-secondary text-sm inline-flex items-center gap-1 w-full sm:w-auto">
         <Plus className="w-4 h-4" />
         Добавить ПО
       </button>

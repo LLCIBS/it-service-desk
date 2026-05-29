@@ -7,8 +7,8 @@ export function HomePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-6">
-      <div className="card p-8 max-w-md w-full">
+    <div className="min-h-dvh flex items-center justify-center bg-slate-50 px-4 py-6 safe-bottom">
+      <div className="card p-6 sm:p-8 max-w-md w-full">
         <div className="flex items-center gap-3 mb-6">
           <div className="bg-blue-600 p-2 rounded-lg">
             <LayoutDashboard className="text-white w-6 h-6" />

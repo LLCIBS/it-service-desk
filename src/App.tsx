@@ -2,25 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, 
   Search, 
-  Filter, 
-  Clock, 
   User, 
   CheckCircle, 
   AlertCircle, 
   FileText, 
   Paperclip, 
   Send, 
-  ChevronRight, 
   X,
-  LayoutDashboard,
   Ticket as TicketIcon,
-  LogOut,
   Monitor,
   HardDrive,
   Cpu,
   Globe,
   Shield,
-  MoreVertical,
   ArrowLeft,
   MessageSquare,
   Users,
@@ -35,16 +29,26 @@ import { apiFetch, ticketFileUrl } from './lib/api';
 import { AssetsPage } from './pages/AssetsPage';
 import { AssetPicker } from './components/shared/AssetPicker';
 import { LinkedAssetCard } from './components/shared/LinkedAssetCard';
+import { AppNav, type AppView } from './components/shared/AppNav';
 import { DEPARTMENTS } from './constants';
 
 const PROBLEM_TYPES = [
-  { id: 'hardware', label: 'Аппаратное обеспечение (ПК, ноутбук, принтер...)', icon: Monitor },
-  { id: 'peripherals', label: 'Периферийное устройство (мышь, клавиатура...)', icon: Cpu },
-  { id: 'software', label: 'Программное обеспечение', icon: FileText },
-  { id: 'network', label: 'Локальная сеть / интернет / VPN', icon: Globe },
-  { id: 'access', label: 'Доступ к системам / правам', icon: Shield },
-  { id: 'other', label: 'Прочее', icon: TicketIcon },
+  { id: 'hardware', label: 'Аппаратное обеспечение (ПК, ноутбук, принтер...)', shortLabel: 'Аппаратное обеспечение' },
+  { id: 'peripherals', label: 'Периферийное устройство (мышь, клавиатура...)', shortLabel: 'Периферия' },
+  { id: 'software', label: 'Программное обеспечение', shortLabel: 'ПО' },
+  { id: 'network', label: 'Локальная сеть / интернет / VPN', shortLabel: 'Сеть / VPN' },
+  { id: 'access', label: 'Доступ к системам / правам', shortLabel: 'Доступ / права' },
+  { id: 'other', label: 'Прочее', shortLabel: 'Прочее' },
 ];
+
+const PROBLEM_TYPE_ICONS: Record<string, typeof Monitor> = {
+  hardware: Monitor,
+  peripherals: Cpu,
+  software: FileText,
+  network: Globe,
+  access: Shield,
+  other: TicketIcon,
+};
 
 const PRIORITIES: { value: Priority; label: string; color: string }[] = [
   { value: 'low', label: 'Низкий', color: 'bg-blue-100 text-blue-700' },
@@ -68,7 +72,6 @@ export default function App() {
   const navigate = useNavigate();
   const role = user!.role;
 
-  type AppView = 'employee' | 'my-tickets' | 'it' | 'admin' | 'assets';
   const defaultView: AppView =
     role === 'org_admin' ? 'admin' : role === 'it_agent' ? 'it' : 'employee';
   const [view, setView] = useState<AppView>(defaultView);
@@ -179,84 +182,19 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Navigation */}
-      <nav className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-600 p-2 rounded-lg">
-            <LayoutDashboard className="text-white w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-800 tracking-tight">IT Service Desk</h1>
-            <p className="text-xs text-slate-500">{organization?.name}</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-4 flex-wrap justify-end">
-          <div className="flex bg-slate-100 p-1 rounded-lg">
-            <button 
-              type="button"
-              onClick={() => setView('employee')}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'employee' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-            >
-              Новая заявка
-            </button>
-            {!canAccessIt && (
-              <button 
-                type="button"
-                onClick={() => setView('my-tickets')}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'my-tickets' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-              >
-                Мои заявки
-              </button>
-            )}
-            {canAccessIt && (
-              <>
-                <button 
-                  type="button"
-                  onClick={() => setView('it')}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'it' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-                >
-                  ИТ-Служба
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => { setAssetsFocusId(null); setView('assets'); }}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'assets' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-                >
-                  ИТ-Активы
-                </button>
-              </>
-            )}
-            {canAccessAdmin && (
-              <button 
-                type="button"
-                onClick={() => setView('admin')}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'admin' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-              >
-                Админ
-              </button>
-            )}
-          </div>
-          <div className="w-px h-6 bg-slate-200 mx-2" />
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600">
-                <User className="w-5 h-5" />
-              </div>
-              <span className="text-sm font-medium text-slate-700">
-                {user?.employee?.fullName ?? user?.email}
-              </span>
-            </div>
-            <button type="button" onClick={handleLogout} className="btn btn-secondary text-sm flex items-center gap-1">
-              <LogOut className="w-4 h-4" />
-              Выйти
-            </button>
-          </div>
-        </div>
-      </nav>
+    <div className="h-dvh flex flex-col overflow-hidden">
+      <AppNav
+        view={view}
+        setView={setView}
+        organizationName={organization?.name}
+        userLabel={user?.employee?.fullName ?? user?.email ?? ''}
+        canAccessIt={canAccessIt}
+        canAccessAdmin={canAccessAdmin}
+        onLogout={handleLogout}
+        onOpenAssets={() => setAssetsFocusId(null)}
+      />
 
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 min-h-0 overflow-hidden">
         <AnimatePresence mode="wait">
           {view === 'employee' ? (
             <EmployeePortal onCreate={handleCreateTicket} onViewTickets={() => setView('my-tickets')} />
@@ -377,16 +315,16 @@ function EmployeePortal({ onCreate, onViewTickets }: { onCreate: (data: FormData
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="max-w-4xl mx-auto py-10 px-6 overflow-y-auto h-full"
+      className="max-w-4xl mx-auto py-6 sm:py-10 px-4 sm:px-6 overflow-y-auto h-full safe-bottom"
     >
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-slate-900 mb-2">Новая заявка в ИТ</h2>
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Новая заявка в ИТ</h2>
         <p className="text-slate-500">Пожалуйста, заполните форму ниже, чтобы мы могли помочь вам быстрее.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8 pb-20">
         {/* Section 1: Employee Data */}
-        <section className="card p-6 space-y-6">
+        <section className="card p-4 sm:p-6 space-y-6">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-4">
             <User className="text-blue-600 w-5 h-5" />
             <h3 className="font-semibold text-slate-800">Данные сотрудника</h3>
@@ -412,7 +350,7 @@ function EmployeePortal({ onCreate, onViewTickets }: { onCreate: (data: FormData
         </section>
 
         {/* Section 2: Problem Details */}
-        <section className="card p-6 space-y-6">
+        <section className="card p-4 sm:p-6 space-y-6">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-4">
             <AlertCircle className="text-blue-600 w-5 h-5" />
             <h3 className="font-semibold text-slate-800">Характеристика проблемы</h3>
@@ -422,8 +360,10 @@ function EmployeePortal({ onCreate, onViewTickets }: { onCreate: (data: FormData
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-3">Тип обращения *</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {PROBLEM_TYPES.map(type => (
-                  <label key={type.id} className="relative flex items-center p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                {PROBLEM_TYPES.map(type => {
+                  const Icon = PROBLEM_TYPE_ICONS[type.id];
+                  return (
+                  <label key={type.id} className="relative flex items-start sm:items-center p-3 sm:p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 min-w-0">
                     <input
                       type="radio"
                       name="problemType"
@@ -433,10 +373,14 @@ function EmployeePortal({ onCreate, onViewTickets }: { onCreate: (data: FormData
                       checked={problemType === type.id}
                       onChange={() => setProblemType(type.id)}
                     />
-                    <type.icon className="w-5 h-5 text-slate-400 mr-3" />
-                    <span className="text-sm font-medium text-slate-700">{type.label}</span>
+                    <Icon className="w-5 h-5 text-slate-400 mr-3 shrink-0 mt-0.5 sm:mt-0" />
+                    <span className="text-sm font-medium text-slate-700 leading-snug">
+                      <span className="sm:hidden">{type.shortLabel}</span>
+                      <span className="hidden sm:inline">{type.label}</span>
+                    </span>
                   </label>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -467,9 +411,9 @@ function EmployeePortal({ onCreate, onViewTickets }: { onCreate: (data: FormData
                   {PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
                 </select>
               </div>
-              <div className="flex items-center gap-3 pt-6">
-                <input type="checkbox" name="remoteAccess" id="remoteAccess" className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                <label htmlFor="remoteAccess" className="text-sm font-medium text-slate-700">Возможность удалённого доступа</label>
+              <div className="flex items-start sm:items-center gap-3 sm:pt-6">
+                <input type="checkbox" name="remoteAccess" id="remoteAccess" className="w-5 h-5 mt-0.5 sm:mt-0 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                <label htmlFor="remoteAccess" className="text-sm font-medium text-slate-700 leading-snug">Возможность удалённого доступа</label>
               </div>
             </div>
 
@@ -509,9 +453,9 @@ function EmployeePortal({ onCreate, onViewTickets }: { onCreate: (data: FormData
           </div>
         </section>
 
-        <div className="flex justify-end gap-4">
-          <button type="button" className="btn btn-secondary">Отмена</button>
-          <button type="submit" disabled={submitting} className="btn btn-primary px-12 flex items-center gap-2">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4">
+          <button type="button" className="btn btn-secondary w-full sm:w-auto">Отмена</button>
+          <button type="submit" disabled={submitting} className="btn btn-primary w-full sm:w-auto sm:px-12 flex items-center justify-center gap-2">
             {submitting ? 'Отправка...' : (
               <>
                 <Send className="w-4 h-4" />
@@ -622,21 +566,21 @@ function AdminDirectory() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
-      className="max-w-5xl mx-auto py-10 px-6 overflow-y-auto h-full"
+      className="max-w-5xl mx-auto py-6 sm:py-10 px-4 sm:px-6 overflow-y-auto h-full safe-bottom"
     >
-      <div className="mb-8 flex items-start gap-4">
-        <div className="bg-blue-600 p-3 rounded-xl">
-          <Users className="text-white w-7 h-7" />
+      <div className="mb-6 sm:mb-8 flex items-start gap-3 sm:gap-4">
+        <div className="bg-blue-600 p-2.5 sm:p-3 rounded-xl shrink-0">
+          <Users className="text-white w-6 h-6 sm:w-7 sm:h-7" />
         </div>
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Справочник сотрудников</h2>
+        <div className="min-w-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Справочник сотрудников</h2>
           <p className="text-slate-500 mt-1">
             Добавляйте сотрудников и учётные записи для входа. Данные профиля подставляются в заявки автоматически.
           </p>
         </div>
       </div>
 
-      <div className="card p-6 space-y-6 mb-8">
+      <div className="card p-4 sm:p-6 space-y-6 mb-6 sm:mb-8">
         <h3 className="font-semibold text-slate-800 border-b border-slate-100 pb-3">
           {editingId ? 'Редактирование записи' : 'Добавить сотрудника'}
         </h3>
@@ -719,7 +663,7 @@ function AdminDirectory() {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-100 bg-slate-50">
           <h3 className="font-semibold text-slate-800">Текущие записи</h3>
         </div>
         {loading ? (
@@ -727,7 +671,43 @@ function AdminDirectory() {
         ) : list.length === 0 ? (
           <div className="p-12 text-center text-slate-400">Записей пока нет</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <div className="md:hidden divide-y divide-slate-100">
+              {list.map((row) => (
+                <div key={row.id} className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-slate-900 truncate">{row.fullName}</p>
+                      <p className="text-sm text-slate-600">{row.department}</p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(row)}
+                        className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-blue-600"
+                        title="Изменить"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => remove(row.id)}
+                        className="p-2 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600"
+                        title="Удалить"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-xs text-slate-500 space-y-1">
+                    <p>Телефон: {row.mobile || '—'}</p>
+                    <p>E-mail: {row.email ?? (row.hasLogin ? '—' : 'нет входа')}</p>
+                    <p>Роль: {row.role ?? '—'}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 text-left text-slate-500">
@@ -771,7 +751,8 @@ function AdminDirectory() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
     </motion.div>
@@ -811,25 +792,25 @@ function ITDashboard({
   }
 
   return (
-    <div className="flex h-full bg-slate-50">
+    <div className="flex h-full min-h-0 bg-slate-50">
       {/* Sidebar / List */}
-      <div className={`w-full md:w-1/3 border-r border-slate-200 bg-white flex flex-col ${selectedTicket ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-4 border-b border-slate-200 space-y-4">
+      <div className={`w-full md:w-1/3 md:min-w-0 md:max-w-md border-r border-slate-200 bg-white flex flex-col min-h-0 ${selectedTicket ? 'hidden md:flex' : 'flex'}`}>
+        <div className="p-3 sm:p-4 border-b border-slate-200 space-y-3 sm:space-y-4 shrink-0">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 z-[1] size-4 -translate-y-1/2 text-slate-400" />
             <input 
               type="text" 
               placeholder="Поиск заявок..." 
-              className="w-full rounded-lg border border-transparent bg-slate-50 py-2.5 pl-10 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border border-transparent bg-slate-50 py-2.5 pl-10 pr-3 text-base sm:text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5 md:flex-col md:overflow-visible md:pb-0">
             <button 
               type="button"
               onClick={() => setFilter('all')}
-              className={`w-full rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors ${filter === 'all' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              className={`shrink-0 md:w-full rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors whitespace-nowrap ${filter === 'all' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
             >
               Все
             </button>
@@ -838,7 +819,7 @@ function ITDashboard({
                 type="button"
                 key={s.value}
                 onClick={() => setFilter(s.value)}
-                className={`w-full rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors ${filter === s.value ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                className={`shrink-0 md:w-full rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors whitespace-nowrap ${filter === s.value ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
               >
                 {s.label}
               </button>
@@ -878,7 +859,7 @@ function ITDashboard({
       </div>
 
       {/* Details View */}
-      <div className={`flex-1 flex flex-col bg-slate-50 ${!selectedTicket ? 'hidden md:flex items-center justify-center text-slate-400' : 'flex'}`}>
+      <div className={`flex-1 min-w-0 flex flex-col bg-slate-50 min-h-0 ${!selectedTicket ? 'hidden md:flex items-center justify-center text-slate-400' : 'flex'}`}>
         {!selectedTicket ? (
           <div className="text-center">
             <TicketIcon className="w-12 h-12 mx-auto mb-4 opacity-20" />
@@ -947,58 +928,57 @@ function TicketDetails({
     <motion.div 
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="h-full flex flex-col bg-white"
+      className="h-full min-h-0 flex flex-col bg-white"
     >
       {/* Header */}
-      <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <button onClick={onClose} className="md:hidden p-2 hover:bg-slate-100 rounded-lg">
+      <div className="p-3 sm:p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 bg-white sticky top-0 z-10 shrink-0">
+        <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
+          <button type="button" onClick={onClose} className="md:hidden p-2 hover:bg-slate-100 rounded-lg shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${PRIORITIES.find(p => p.value === ticket.priority)?.color}`}>
                 {PRIORITIES.find(p => p.value === ticket.priority)?.label}
               </span>
               <span className="text-xs text-slate-400">#{ticket.id.slice(0, 8)}</span>
             </div>
-            <h3 className="font-bold text-slate-900">{ticket.title}</h3>
+            <h3 className="font-bold text-slate-900 text-base sm:text-lg break-words">{ticket.title}</h3>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
           {canManageTickets && showResolutionInput ? (
-            <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-200">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-50 p-2 sm:p-1 rounded-lg border border-slate-200 w-full sm:w-auto">
               <input 
                 type="text" 
                 placeholder="Опишите решение..." 
-                className="input py-1 text-xs w-48"
+                className="input py-2 sm:py-1 text-sm w-full sm:w-48"
                 value={resolutionText}
                 onChange={(e) => setResolutionText(e.target.value)}
               />
-              <button onClick={submitResolution} className="btn btn-primary py-1 text-xs">OK</button>
-              <button onClick={() => setShowResolutionInput(false)} className="p-1 hover:bg-slate-200 rounded"><X className="w-4 h-4" /></button>
+              <div className="flex gap-2">
+                <button type="button" onClick={submitResolution} className="btn btn-primary py-2 sm:py-1 text-xs flex-1 sm:flex-none">OK</button>
+                <button type="button" onClick={() => setShowResolutionInput(false)} className="p-2 hover:bg-slate-200 rounded"><X className="w-4 h-4" /></button>
+              </div>
             </div>
           ) : canManageTickets ? (
             <select 
               value={ticket.status}
               onChange={(e) => handleStatusChange(e.target.value as TicketStatus)}
               disabled={isUpdating}
-              className={`text-sm font-semibold px-3 py-1.5 rounded-lg border-none focus:ring-2 ring-blue-500 cursor-pointer ${STATUSES.find(s => s.value === ticket.status)?.color}`}
+              className={`text-sm font-semibold px-3 py-2 sm:py-1.5 rounded-lg border-none focus:ring-2 ring-blue-500 cursor-pointer w-full sm:w-auto max-w-full ${STATUSES.find(s => s.value === ticket.status)?.color}`}
             >
               {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           ) : (
-            <span className={`text-sm font-semibold px-3 py-1.5 rounded-lg ${STATUSES.find(s => s.value === ticket.status)?.color}`}>
+            <span className={`text-sm font-semibold px-3 py-2 sm:py-1.5 rounded-lg w-full sm:w-auto text-center ${STATUSES.find(s => s.value === ticket.status)?.color}`}>
               {STATUSES.find(s => s.value === ticket.status)?.label}
             </span>
           )}
-          <button className="p-2 hover:bg-slate-100 rounded-lg">
-            <MoreVertical className="w-5 h-5 text-slate-400" />
-          </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-8">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 sm:space-y-8 min-h-0 safe-bottom">
         {/* Info Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
@@ -1095,25 +1075,25 @@ function TicketDetails({
             <section className="card p-4 space-y-4">
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Информация о заявителе</h4>
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-xs text-slate-500">ФИО:</span>
-                  <span className="text-xs font-semibold text-slate-800">{ticket.requesterName}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-slate-50">
+                  <span className="text-xs text-slate-500 shrink-0">ФИО:</span>
+                  <span className="text-xs font-semibold text-slate-800 break-words text-left sm:text-right">{ticket.requesterName}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-xs text-slate-500">Отдел:</span>
-                  <span className="text-xs font-semibold text-slate-800">{ticket.department}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-slate-50">
+                  <span className="text-xs text-slate-500 shrink-0">Отдел:</span>
+                  <span className="text-xs font-semibold text-slate-800 break-words text-left sm:text-right">{ticket.department}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-xs text-slate-500">Локация:</span>
-                  <span className="text-xs font-semibold text-slate-800">{ticket.location || '—'}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-slate-50">
+                  <span className="text-xs text-slate-500 shrink-0">Локация:</span>
+                  <span className="text-xs font-semibold text-slate-800 break-words text-left sm:text-right">{ticket.location || '—'}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-xs text-slate-500">E-mail:</span>
-                  <span className="text-xs font-semibold text-slate-800">{ticket.contactInfo.email || '—'}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-slate-50">
+                  <span className="text-xs text-slate-500 shrink-0">E-mail:</span>
+                  <span className="text-xs font-semibold text-slate-800 break-all text-left sm:text-right">{ticket.contactInfo.email || '—'}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-xs text-slate-500">Телефон:</span>
-                  <span className="text-xs font-semibold text-slate-800">{[ticket.contactInfo.phone, ticket.contactInfo.mobile].filter(Boolean).join(', ') || '—'}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2">
+                  <span className="text-xs text-slate-500 shrink-0">Телефон:</span>
+                  <span className="text-xs font-semibold text-slate-800 break-words text-left sm:text-right">{[ticket.contactInfo.phone, ticket.contactInfo.mobile].filter(Boolean).join(', ') || '—'}</span>
                 </div>
               </div>
             </section>

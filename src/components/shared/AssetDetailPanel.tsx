@@ -166,17 +166,17 @@ export function AssetDetailPanel({
   const showSpecs = (form.assetType as AssetType) === 'computer' || (form.assetType as AssetType) === 'network';
 
   return (
-    <div className="flex-1 flex flex-col bg-white overflow-hidden h-full">
-      <div className="p-4 border-b border-slate-200 flex items-center justify-between gap-2 sticky top-0 bg-white z-10">
-        <div className="flex items-center gap-2 min-w-0">
-          <button type="button" onClick={onClose} className="md:hidden p-2 hover:bg-slate-100 rounded-lg">
+    <div className="flex-1 flex flex-col bg-white overflow-hidden h-full min-h-0">
+      <div className="p-3 sm:p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 sticky top-0 bg-white z-10 shrink-0">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <button type="button" onClick={onClose} className="md:hidden p-2 hover:bg-slate-100 rounded-lg shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             {asset && !editing ? (
               <>
-                <h3 className="font-bold text-slate-900 truncate">{asset.name}</h3>
-                <div className="flex items-center gap-2 mt-0.5">
+                <h3 className="font-bold text-slate-900 break-words">{asset.name}</h3>
+                <div className="flex flex-wrap items-center gap-2 mt-0.5">
                   <StatusBadge status={asset.status} />
                   {asset.inventoryNumber && (
                     <span className="text-xs text-slate-500">№ {asset.inventoryNumber}</span>
@@ -188,22 +188,22 @@ export function AssetDetailPanel({
             )}
           </div>
         </div>
-        <div className="flex gap-1 shrink-0">
+        <div className="flex gap-1 shrink-0 w-full sm:w-auto justify-end">
           {asset && !editing && (
             <>
-              <button type="button" onClick={() => setEditing(true)} className="btn btn-secondary text-sm p-2">
+              <button type="button" onClick={() => setEditing(true)} className="btn btn-secondary text-sm p-2 min-w-[40px]">
                 <Pencil className="w-4 h-4" />
               </button>
-              <button type="button" onClick={remove} className="btn btn-secondary text-sm p-2 text-red-600">
+              <button type="button" onClick={remove} className="btn btn-secondary text-sm p-2 text-red-600 min-w-[40px]">
                 <Trash2 className="w-4 h-4" />
               </button>
             </>
           )}
           {editing && (
             <>
-              <button type="button" onClick={save} className="btn btn-primary text-sm inline-flex items-center gap-1">
+              <button type="button" onClick={save} className="btn btn-primary text-sm inline-flex items-center gap-1 flex-1 sm:flex-none">
                 <Save className="w-4 h-4" />
-                Сохранить
+                <span className="sm:inline">Сохранить</span>
               </button>
               {assetId && (
                 <button type="button" onClick={() => { setEditing(false); if (asset) setFormFromAsset(asset); }} className="btn btn-secondary text-sm p-2">
@@ -215,7 +215,7 @@ export function AssetDetailPanel({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-8">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 sm:space-y-8 min-h-0 safe-bottom">
         {editing ? (
           <div className="space-y-4 max-w-2xl">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -295,14 +295,35 @@ export function AssetDetailPanel({
           </div>
         ) : asset ? (
           <>
-            <section className="grid grid-cols-2 gap-4 text-sm max-w-xl">
-              <div><span className="text-slate-500">Производитель:</span> <span className="font-medium">{asset.manufacturer || '—'}</span></div>
-              <div><span className="text-slate-500">Модель:</span> <span className="font-medium">{asset.model || '—'}</span></div>
-              <div><span className="text-slate-500">Серийный №:</span> <span className="font-medium">{asset.serialNumber || '—'}</span></div>
-              <div><span className="text-slate-500">Локация:</span> <span className="font-medium">{asset.location || '—'}</span></div>
-              <div><span className="text-slate-500">Отдел:</span> <span className="font-medium">{asset.department || '—'}</span></div>
-              <div><span className="text-slate-500">Ответственный:</span> <span className="font-medium">{asset.responsibleEmployeeName || '—'}</span></div>
-              <div><span className="text-slate-500">Пользователь:</span> <span className="font-medium">{asset.assignedEmployeeName || '—'}</span></div>
+            <section className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-0.5 py-1 border-b border-slate-50 sm:border-0">
+                <span className="text-slate-500">Производитель:</span>
+                <span className="font-medium text-slate-800 break-words">{asset.manufacturer || '—'}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-0.5 py-1 border-b border-slate-50 sm:border-0">
+                <span className="text-slate-500">Модель:</span>
+                <span className="font-medium text-slate-800 break-words">{asset.model || '—'}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-0.5 py-1 border-b border-slate-50 sm:border-0">
+                <span className="text-slate-500">Серийный №:</span>
+                <span className="font-medium text-slate-800 break-words">{asset.serialNumber || '—'}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-0.5 py-1 border-b border-slate-50 sm:border-0">
+                <span className="text-slate-500">Локация:</span>
+                <span className="font-medium text-slate-800 break-words">{asset.location || '—'}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-0.5 py-1 border-b border-slate-50 sm:border-0">
+                <span className="text-slate-500">Отдел:</span>
+                <span className="font-medium text-slate-800">{asset.department || '—'}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-0.5 py-1 border-b border-slate-50 sm:border-0">
+                <span className="text-slate-500">Ответственный:</span>
+                <span className="font-medium text-slate-800 break-words">{asset.responsibleEmployeeName || '—'}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-0.5 py-1 sm:col-span-2">
+                <span className="text-slate-500">Пользователь:</span>
+                <span className="font-medium text-slate-800 break-words">{asset.assignedEmployeeName || '—'}</span>
+              </div>
             </section>
             {asset.hardwareSpecs && (
               <section>

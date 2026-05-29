@@ -14,10 +14,23 @@
   --accent: #3b82f6;
 }
 
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background-color: var(--bg);
   color: var(--text-primary);
   font-family: var(--font-sans);
+  overflow-x: hidden;
+  min-height: 100dvh;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 .card {
@@ -30,9 +43,18 @@ body {
 .input {
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   width: 100%;
+  max-width: 100%;
   transition: border-color 0.2s;
+  font-size: 16px;
+}
+
+@media (min-width: 640px) {
+  .input {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
 }
 
 .input:focus {
@@ -42,11 +64,15 @@ body {
 }
 
 .btn {
-  padding: 8px 16px;
+  padding: 10px 16px;
   border-radius: 8px;
   font-weight: 500;
   transition: all 0.2s;
   cursor: pointer;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-primary {
@@ -65,4 +91,17 @@ body {
 
 .btn-secondary:hover {
   background: #e2e8f0;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }

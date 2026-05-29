@@ -37,8 +37,8 @@ export function PasswordReveal({
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <code className="text-sm bg-slate-100 px-2 py-1 rounded flex-1 truncate">
+    <div className="flex items-center gap-2 min-w-0 w-full">
+      <code className="text-sm bg-slate-100 px-2 py-1 rounded flex-1 min-w-0 truncate">
         {visible ? value : masked}
       </code>
       <button

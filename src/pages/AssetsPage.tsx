@@ -90,8 +90,9 @@ export function AssetsPage({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
-      <div className="bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center gap-2">
+    <div className="flex flex-col h-full min-h-0 bg-slate-50">
+      <div className="bg-white border-b border-slate-200 px-3 sm:px-4 py-3 flex flex-wrap items-center gap-2 shrink-0">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide flex-1 min-w-0">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -101,14 +102,15 @@ export function AssetsPage({
               setSelectedId(null);
               setCreating(false);
             }}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
               tab === t.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            <t.icon className="w-4 h-4" />
+            <t.icon className="w-4 h-4 shrink-0" />
             {t.label}
           </button>
         ))}
+        </div>
         {tab !== 'credentials' && (
           <button
             type="button"
@@ -116,7 +118,7 @@ export function AssetsPage({
               setCreating(true);
               setSelectedId(null);
             }}
-            className="ml-auto btn btn-primary text-sm inline-flex items-center gap-1"
+            className="btn btn-primary text-sm inline-flex items-center gap-1 shrink-0 w-full sm:w-auto sm:ml-auto"
           >
             <Plus className="w-4 h-4" />
             Добавить
@@ -125,7 +127,7 @@ export function AssetsPage({
       </div>
 
       {tab === 'credentials' ? (
-        <div className="flex-1 overflow-y-auto p-6 max-w-3xl mx-auto w-full">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 max-w-3xl mx-auto w-full min-h-0 safe-bottom">
           <div className="mb-4">
             <SearchInput value={credSearch} onChange={setCredSearch} placeholder="Поиск учётных записей..." />
           </div>
@@ -141,8 +143,9 @@ export function AssetsPage({
           )}
         </div>
       ) : (
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 min-h-0 overflow-hidden">
           <AssetListPanel
+            className={selectedId || creating ? 'hidden md:flex' : 'flex'}
             items={items}
             selectedId={creating ? null : selectedId}
             onSelect={(id) => {
@@ -155,7 +158,7 @@ export function AssetsPage({
             onStatusFilterChange={setStatusFilter}
             emptyText={loading ? 'Загрузка...' : 'Активы не найдены'}
           />
-          <div className={`flex-1 flex flex-col ${selectedId || creating ? 'flex' : 'hidden md:flex'}`}>
+          <div className={`flex-1 min-w-0 flex flex-col min-h-0 ${selectedId || creating ? 'flex' : 'hidden md:flex'}`}>
             {(selectedId || creating) ? (
               <AssetDetailPanel
                 assetId={creating ? null : selectedId}
