@@ -2,6 +2,8 @@ import { Router } from "express";
 import { requireTenantAuth, type AuthedRequest } from "../middleware/requireAuth";
 import { requireRole } from "../middleware/requireRole";
 import * as departmentsRepo from "../db/departments";
+import { validateBody } from "../validation/middleware";
+import { departmentSchema } from "../validation/schemas";
 
 export const departmentsRouter = Router();
 
@@ -19,6 +21,7 @@ departmentsRouter.post(
   "/departments",
   requireTenantAuth,
   requireRole("org_admin"),
+  validateBody(departmentSchema),
   async (req: AuthedRequest, res) => {
     try {
       const { name } = req.body || {};
@@ -49,6 +52,7 @@ departmentsRouter.patch(
   "/departments/:id",
   requireTenantAuth,
   requireRole("org_admin"),
+  validateBody(departmentSchema),
   async (req: AuthedRequest, res) => {
     try {
       const { name } = req.body || {};

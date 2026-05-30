@@ -11,12 +11,15 @@ import {
 } from "../db/organizations";
 import { requirePlatformAuth, type AuthedRequest } from "../middleware/requireAuth";
 import { PLATFORM_ORG_SLUG } from "../db/migrate-platform";
+import { authLimiter } from "../middleware/security";
+import { validateBody } from "../validation/middleware";
+import { loginSchema, createOrgSchema } from "../validation/schemas";
 
 const SLUG_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 
 export const platformRouter = Router();
 
-platformRouter.post("/auth/login", async (req, res) => {
+platformRouter.post("/auth/login", authLimiter, validateBody(loginSchema), async (req, res) => {
   try {
     const { email, password } = req.body || {};
     if (!email || !password) {
@@ -34,24 +37,32 @@ platformRouter.post("/auth/login", async (req, res) => {
     }
 
     const platformOrg = await getPlatformOrganization();
-    req.session.userId = user.id;
-    req.session.homeOrganizationId = platformOrg.id;
-    req.session.organizationId = null;
 
-    req.session.save((err) => {
-      if (err) {
-        console.error(err);
+    // Регенерируем сессию, чтобы исключить session fixation.
+    req.session.regenerate((regenErr) => {
+      if (regenErr) {
+        console.error(regenErr);
         return res.status(500).json({ error: "Session error" });
       }
-      res.json({
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          employee: null,
-        },
-        organization: platformOrg,
-        inTenantContext: false,
+      req.session.userId = user.id;
+      req.session.homeOrganizationId = platformOrg.id;
+      req.session.organizationId = null;
+
+      req.session.save((err) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Session error" });
+        }
+        res.json({
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            employee: null,
+          },
+          organization: platformOrg,
+          inTenantContext: false,
+        });
       });
     });
   } catch (err) {
@@ -98,7 +109,7 @@ platformRouter.get("/organizations", requirePlatformAuth, async (req: AuthedRequ
   }
 });
 
-platformRouter.post("/organizations", requirePlatformAuth, async (req: AuthedRequest, res) => {
+platformRouter.post("/organizations", requirePlatformAuth, validateBody(createOrgSchema), async (req: AuthedRequest, res) => {
   try {
     if (req.user!.inTenantContext) {
       return res.status(400).json({ error: "Exit organization context first" });

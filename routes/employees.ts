@@ -2,6 +2,9 @@ import { Router } from "express";
 import { requireTenantAuth, type AuthedRequest } from "../middleware/requireAuth";
 import { requireRole } from "../middleware/requireRole";
 import * as employeesRepo from "../db/employees";
+import { isAssignableTenantRole } from "../db/auth-types";
+import { validateBody } from "../validation/middleware";
+import { employeeCreateSchema, employeeUpdateSchema } from "../validation/schemas";
 
 export const employeesRouter = Router();
 
@@ -32,7 +35,7 @@ employeesRouter.get("/employees", async (req: AuthedRequest, res) => {
   }
 });
 
-employeesRouter.post("/employees", async (req: AuthedRequest, res) => {
+employeesRouter.post("/employees", validateBody(employeeCreateSchema), async (req: AuthedRequest, res) => {
   try {
     const { department, fullName, mobile, email, password, role } = req.body || {};
     if (!department || !fullName) {
@@ -40,6 +43,9 @@ employeesRouter.post("/employees", async (req: AuthedRequest, res) => {
     }
     if (email && (!password || !role)) {
       return res.status(400).json({ error: "password and role required when email is set" });
+    }
+    if (role !== undefined && !isAssignableTenantRole(role)) {
+      return res.status(400).json({ error: "Invalid role" });
     }
     const row = await employeesRepo.createEmployee(req.user!.organizationId, {
       department: String(department).trim(),
@@ -52,16 +58,24 @@ employeesRouter.post("/employees", async (req: AuthedRequest, res) => {
     res.status(201).json(row);
   } catch (err: unknown) {
     console.error(err);
-    if (err && typeof err === "object" && "code" in err && err.code === "23505") {
-      return res.status(409).json({ error: "Email already exists" });
+    if (err && typeof err === "object" && "code" in err) {
+      if (err.code === "23505") {
+        return res.status(409).json({ error: "Email already exists" });
+      }
+      if (err.code === "FORBIDDEN_ROLE") {
+        return res.status(400).json({ error: "Invalid role" });
+      }
     }
     res.status(500).json({ error: "Failed to create employee" });
   }
 });
 
-employeesRouter.patch("/employees/:id", async (req: AuthedRequest, res) => {
+employeesRouter.patch("/employees/:id", validateBody(employeeUpdateSchema), async (req: AuthedRequest, res) => {
   try {
     const { department, fullName, mobile, email, password, role } = req.body || {};
+    if (role !== undefined && !isAssignableTenantRole(role)) {
+      return res.status(400).json({ error: "Invalid role" });
+    }
     const updates: Parameters<typeof employeesRepo.updateEmployee>[2] = {};
     if (department !== undefined) updates.department = String(department).trim();
     if (fullName !== undefined) updates.fullName = String(fullName).trim();

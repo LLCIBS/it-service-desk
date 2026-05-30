@@ -2,6 +2,8 @@ import { Router } from "express";
 import { requireTenantAuth, type AuthedRequest } from "../middleware/requireAuth";
 import { requireRole } from "../middleware/requireRole";
 import * as credentialsRepo from "../db/credentials";
+import { validateBody } from "../validation/middleware";
+import { credentialCreateSchema, credentialUpdateSchema } from "../validation/schemas";
 
 export const credentialsRouter = Router();
 
@@ -37,7 +39,7 @@ credentialsRouter.get("/credentials/:id", async (req: AuthedRequest, res) => {
   }
 });
 
-credentialsRouter.post("/credentials", async (req: AuthedRequest, res) => {
+credentialsRouter.post("/credentials", validateBody(credentialCreateSchema), async (req: AuthedRequest, res) => {
   try {
     const { title, password, assetId, credentialType, username, url, notes } = req.body || {};
     if (!title || !password) {
@@ -59,7 +61,7 @@ credentialsRouter.post("/credentials", async (req: AuthedRequest, res) => {
   }
 });
 
-credentialsRouter.patch("/credentials/:id", async (req: AuthedRequest, res) => {
+credentialsRouter.patch("/credentials/:id", validateBody(credentialUpdateSchema), async (req: AuthedRequest, res) => {
   try {
     const cred = await credentialsRepo.updateCredential(
       req.params.id,

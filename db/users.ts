@@ -1,8 +1,25 @@
 import bcrypt from "bcrypt";
 import { pool } from "./pool";
-import type { AuthEmployee, AuthUser, UserRole } from "./auth-types";
+import {
+  isAssignableTenantRole,
+  type AuthEmployee,
+  type AuthUser,
+  type UserRole,
+} from "./auth-types";
 
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = 12;
+
+/**
+ * Защита от эскалации привилегий: запрещаем назначать super_admin
+ * через обычные (тенантные) операции создания/обновления пользователей.
+ */
+function assertAssignableRole(role: UserRole): void {
+  if (!isAssignableTenantRole(role)) {
+    throw Object.assign(new Error("Role not assignable via tenant API"), {
+      code: "FORBIDDEN_ROLE",
+    });
+  }
+}
 
 interface UserRow {
   id: string;
@@ -86,6 +103,7 @@ export async function createUserWithEmployee(data: {
   fullName: string;
   mobile: string;
 }): Promise<AuthUser> {
+  assertAssignableRole(data.role);
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -131,6 +149,7 @@ export async function updateUserCredentials(
   updates: { role?: UserRole; password?: string; email?: string }
 ): Promise<void> {
   if (updates.role !== undefined) {
+    assertAssignableRole(updates.role);
     await pool.query(
       `UPDATE users SET role = $1 WHERE id = $2 AND organization_id = $3`,
       [updates.role, userId, organizationId]
@@ -197,6 +216,7 @@ export async function createUserForExistingEmployee(data: {
   password: string;
   role: UserRole;
 }): Promise<AuthUser> {
+  assertAssignableRole(data.role);
   const passwordHash = await hashPassword(data.password);
   const { rows } = await pool.query<UserRow>(
     `INSERT INTO users (organization_id, email, password_hash, role, employee_id)

@@ -5,6 +5,13 @@ import fs from "fs";
 import { requireTenantAuth, type AuthedRequest } from "../middleware/requireAuth";
 import { requireRole } from "../middleware/requireRole";
 import * as ticketsRepo from "../db/tickets";
+import { validateBody } from "../validation/middleware";
+import {
+  ticketCreateSchema,
+  ticketUpdateSchema,
+  ticketCommentSchema,
+} from "../validation/schemas";
+import { firstIssueMessage } from "../validation/common";
 
 export function createTicketsRouter(upload: multer.Multer) {
   const router = Router();
@@ -32,7 +39,17 @@ export function createTicketsRouter(upload: multer.Multer) {
       if (!user.employee) {
         return res.status(400).json({ error: "Employee profile required" });
       }
-      const payload = JSON.parse(req.body.ticket);
+      let rawPayload: unknown;
+      try {
+        rawPayload = JSON.parse(req.body.ticket);
+      } catch {
+        return res.status(400).json({ error: "Invalid ticket payload" });
+      }
+      const parsed = ticketCreateSchema.safeParse(rawPayload);
+      if (!parsed.success) {
+        return res.status(400).json({ error: firstIssueMessage(parsed.error) });
+      }
+      const payload = parsed.data;
       const fileNames =
         (req.files as Express.Multer.File[] | undefined)?.map((f) => f.filename) ?? [];
       const newTicket = await ticketsRepo.createTicket(
@@ -51,6 +68,7 @@ export function createTicketsRouter(upload: multer.Multer) {
   router.patch(
     "/tickets/:id",
     requireRole("it_agent", "org_admin"),
+    validateBody(ticketUpdateSchema),
     async (req: AuthedRequest, res) => {
       try {
         const user = req.user!;
@@ -71,6 +89,7 @@ export function createTicketsRouter(upload: multer.Multer) {
   router.post(
     "/tickets/:id/comments",
     requireRole("it_agent", "org_admin"),
+    validateBody(ticketCommentSchema),
     async (req: AuthedRequest, res) => {
     try {
       const user = req.user!;
@@ -126,6 +145,14 @@ export function createTicketsRouter(upload: multer.Multer) {
       if (!fs.existsSync(filePath)) {
         return res.status(404).send("Not found");
       }
+      // Отдаём как вложение и запрещаем MIME-sniffing, чтобы загруженный
+      // HTML/SVG не исполнялся в браузере в контексте приложения (stored XSS).
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${path.basename(req.params.filename)}"`
+      );
       res.sendFile(filePath);
     } catch (err) {
       console.error(err);

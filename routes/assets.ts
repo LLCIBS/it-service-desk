@@ -3,6 +3,13 @@ import { requireTenantAuth, type AuthedRequest } from "../middleware/requireAuth
 import { requireRole } from "../middleware/requireRole";
 import * as assetsRepo from "../db/assets";
 import type { AssetStatus, AssetType } from "../src/types";
+import { validateBody } from "../validation/middleware";
+import {
+  assetCreateSchema,
+  assetUpdateSchema,
+  softwareCreateSchema,
+  softwareUpdateSchema,
+} from "../validation/schemas";
 
 export const assetsRouter = Router();
 
@@ -52,7 +59,7 @@ assetsRouter.get("/assets/:id", async (req: AuthedRequest, res) => {
   }
 });
 
-assetsRouter.post("/assets", async (req: AuthedRequest, res) => {
+assetsRouter.post("/assets", validateBody(assetCreateSchema), async (req: AuthedRequest, res) => {
   try {
     const body = req.body || {};
     if (!body.name || !body.assetType) {
@@ -73,7 +80,7 @@ assetsRouter.post("/assets", async (req: AuthedRequest, res) => {
   }
 });
 
-assetsRouter.patch("/assets/:id", async (req: AuthedRequest, res) => {
+assetsRouter.patch("/assets/:id", validateBody(assetUpdateSchema), async (req: AuthedRequest, res) => {
   try {
     const asset = await assetsRepo.updateAsset(
       req.params.id,
@@ -102,7 +109,7 @@ assetsRouter.delete("/assets/:id", async (req: AuthedRequest, res) => {
   }
 });
 
-assetsRouter.post("/assets/:id/software", async (req: AuthedRequest, res) => {
+assetsRouter.post("/assets/:id/software", validateBody(softwareCreateSchema), async (req: AuthedRequest, res) => {
   try {
     const { name, version, licenseKey, installedAt, notes } = req.body || {};
     if (!name) return res.status(400).json({ error: "name is required" });
@@ -121,7 +128,7 @@ assetsRouter.post("/assets/:id/software", async (req: AuthedRequest, res) => {
   }
 });
 
-assetsRouter.patch("/assets/:assetId/software/:softwareId", async (req: AuthedRequest, res) => {
+assetsRouter.patch("/assets/:assetId/software/:softwareId", validateBody(softwareUpdateSchema), async (req: AuthedRequest, res) => {
   try {
     const asset = await assetsRepo.updateSoftware(
       req.params.softwareId,
